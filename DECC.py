@@ -27,7 +27,7 @@ SPENDING_DATA = {
     },
 }
 
-# Extend AI_RESPONSES with additional financial goals
+# ------------------------ AI Responses ------------------------ #
 AI_RESPONSES = {
     "Track and analyze my spending habits": {
         "Germany": "Your highest expense in Germany is rent, followed by groceries. Consider adjusting entertainment spending for better savings.",
@@ -50,30 +50,99 @@ AI_RESPONSES = {
         "Italy": "For Italy, avoid dynamic currency conversion when paying with foreign cards—it often leads to extra fees.",
         "UK": "Using Revolut or Monzo in the UK could help optimize currency exchange rates and reduce international withdrawal fees."
     },
-    "Monitor investment performance": {
-        "Germany": "Your portfolio shows steady growth, but consider diversifying to mitigate risks in volatile markets.",
-        "Italy": "Your investments are performing well. Keep an eye on market trends to capitalize on emerging opportunities.",
-        "UK": "UK investment returns are stable. Explore new sectors for long-term growth."
+    "Consolidate multi-currency accounts": {
+        "Germany": "Consolidating your accounts in Germany has simplified tracking. Consider using automated tools for real-time currency conversion.",
+        "Italy": "Your multi-currency accounts in Italy are well balanced. Regularly review exchange rates to optimize fund allocation.",
+        "UK": "Consolidating UK accounts improves clarity. Monitor currency fluctuations to adjust your holdings accordingly."
+    }
+}
+
+# ------------------------ Actionable AI Insights ------------------------ #
+ACTIONABLE_INSIGHTS = {
+    "Track and analyze my spending habits": {
+        "Germany": [
+            "Review monthly spending reports",
+            "Set alerts for overspending",
+            "Schedule a consultation with a financial advisor"
+        ],
+        "Italy": [
+            "Compare local grocery prices",
+            "Review expense categories",
+            "Consider a budgeting app"
+        ],
+        "UK": [
+            "Analyze rent vs. utilities",
+            "Explore shared housing options",
+            "Investigate public transport discounts"
+        ]
     },
-    "Track international transfers": {
-        "Germany": "Your international transfers from Germany are efficient. Monitor fees closely to maximize your funds.",
-        "Italy": "Transfers from Italy show a healthy trend, but there is room to negotiate lower fees with service providers.",
-        "UK": "UK transfer activity indicates frequent transactions. Consider consolidating transfers to reduce fees."
+    "Reduce my expenses": {
+        "Germany": [
+            "Switch to budget grocery stores",
+            "Reduce dining out frequency",
+            "Check subscription services for redundancy"
+        ],
+        "Italy": [
+            "Negotiate transportation fares",
+            "Bulk purchase essentials",
+            "Review dining out expenses"
+        ],
+        "UK": [
+            "Compare rent-sharing options",
+            "Review energy bills",
+            "Check local deals for groceries"
+        ]
     },
-    "Optimize tax planning": {
-        "Germany": "Tax planning in Germany can benefit from proactive deductions. Consult a tax advisor to optimize your strategies.",
-        "Italy": "Italy's tax system offers opportunities for savings. Review your deductible expenses to lower your tax bill.",
-        "UK": "Your tax planning in the UK appears efficient. Explore additional tax relief options to reduce liabilities."
+    "Set a monthly budget": {
+        "Germany": [
+            "Draft a monthly budget plan",
+            "Track weekly expenses",
+            "Set clear savings targets"
+        ],
+        "Italy": [
+            "Use budgeting apps",
+            "Set aside emergency funds",
+            "Plan for annual fees"
+        ],
+        "UK": [
+            "Implement seasonal budgeting",
+            "Monitor utility expenses",
+            "Adjust discretionary spending"
+        ]
+    },
+    "Optimize currency exchange": {
+        "Germany": [
+            "Research multi-currency accounts",
+            "Compare exchange rates regularly",
+            "Consider fintech solutions for transfers"
+        ],
+        "Italy": [
+            "Check for dynamic conversion fees",
+            "Compare fees among providers",
+            "Switch to a multi-currency card"
+        ],
+        "UK": [
+            "Monitor exchange rate fluctuations",
+            "Use cost-effective transfer services",
+            "Negotiate fees with your bank"
+        ]
     },
     "Consolidate multi-currency accounts": {
-        "Germany": "Consolidating your accounts in Germany has simplified tracking. Consider automated tools for real-time currency conversion.",
-        "Italy": "Your multi-currency accounts in Italy are balanced. Regularly review exchange rates to optimize fund allocation.",
-        "UK": "Consolidating UK accounts enhances clarity. Monitor currency fluctuations to adjust your holdings accordingly."
-    },
-    "Track savings and emergency funds": {
-        "Germany": "Your savings growth in Germany is on track. Consider setting clear targets for your emergency fund.",
-        "Italy": "Tracking savings in Italy shows steady progress. Increase contributions during high-income periods to boost your fund.",
-        "UK": "UK savings are growing. Define specific emergency fund goals to prepare for unexpected expenses."
+        "Germany": [
+            "Integrate accounts into a single dashboard",
+            "Set up real-time exchange alerts",
+            "Review automated conversion tools"
+        ],
+        "Italy": [
+            "Streamline account management",
+            "Monitor consolidation benefits",
+            "Research account integration apps"
+        ],
+        "UK": [
+            "Consolidate accounts for clarity",
+            "Use digital tools for account management",
+            "Compare consolidation platforms"
+        ]
     }
 }
 
@@ -88,7 +157,12 @@ def get_ai_responses():
     """Returns the AI responses dictionary."""
     return AI_RESPONSES
 
-# ------------------------ Existing Chart Functions ------------------------ #
+@st.cache_data
+def get_actionable_insights():
+    """Returns the actionable insights dictionary."""
+    return ACTIONABLE_INSIGHTS
+
+# ------------------------ Chart Functions ------------------------ #
 def plot_spending_breakdown(region: str, spending_data: dict) -> plt.Figure:
     """Bar chart for spending breakdown."""
     spending = spending_data.get(region, {})
@@ -195,70 +269,6 @@ def plot_currency_optimization_chart(region: str) -> plt.Figure:
     plt.tight_layout()
     return fig
 
-# ------------------------ New Chart Functions ------------------------ #
-def plot_investment_performance_chart(region: str) -> plt.Figure:
-    """Line chart showing investment performance over 12 months."""
-    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    base_values = [10000, 10200, 10150, 10300, 10400, 10550, 
-                   10700, 10600, 10800, 11000, 10950, 11100]
-    # Slight adjustment based on region
-    if region == "Italy":
-        values = [v - 200 for v in base_values]
-    elif region == "UK":
-        values = [v + 200 for v in base_values]
-    else:
-        values = base_values
-
-    fig, ax = plt.subplots(figsize=(6, 4))
-    ax.plot(months, values, marker='o', color='purple')
-    ax.set_title(f"Investment Performance in {region}")
-    ax.set_xlabel("Month")
-    ax.set_ylabel("Portfolio Value ($)")
-    plt.tight_layout()
-    return fig
-
-def plot_international_transfers_chart(region: str) -> plt.Figure:
-    """Bar chart showing international transfer amounts over 6 months."""
-    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
-    if region == "Germany":
-        transfers = [500, 700, 650, 800, 750, 900]
-    elif region == "Italy":
-        transfers = [450, 600, 580, 620, 700, 680]
-    elif region == "UK":
-        transfers = [550, 720, 680, 770, 800, 850]
-    else:
-        transfers = [500, 600, 650, 700, 750, 800]
-    
-    fig, ax = plt.subplots(figsize=(6, 4))
-    ax.bar(months, transfers, color='mediumpurple')
-    ax.set_title(f"International Transfers in {region}")
-    ax.set_xlabel("Month")
-    ax.set_ylabel("Transfer Amount ($)")
-    plt.tight_layout()
-    return fig
-
-def plot_tax_planning_chart(region: str) -> plt.Figure:
-    """Donut chart showing tax planning breakdown."""
-    allocations = {"Estimated Taxes": 25, "Tax Savings Potential": 10, "Net Income": 65}
-    amounts = list(allocations.values())
-    labels = list(allocations.keys())
-    colors = ["#ff9999", "#66b3ff", "#99ff99"]
-    
-    fig, ax = plt.subplots(figsize=(6, 4))
-    wedges, texts, autotexts = ax.pie(
-        amounts,
-        labels=labels,
-        autopct=lambda pct: f"{pct:.1f}%",
-        startangle=90,
-        colors=colors,
-        wedgeprops=dict(width=0.4, edgecolor='w')
-    )
-    ax.set_title(f"Tax Planning Breakdown in {region}")
-    ax.set(aspect="equal")
-    plt.tight_layout()
-    return fig
-
 def plot_multi_currency_chart() -> plt.Figure:
     """Pie chart showing distribution across multi-currency accounts."""
     currencies = ["USD", "EUR", "GBP"]
@@ -269,28 +279,6 @@ def plot_multi_currency_chart() -> plt.Figure:
     ax.pie(balances, labels=currencies, autopct=lambda pct: f"${pct:.0f}", colors=colors, startangle=90)
     ax.set_title("Multi-Currency Account Distribution")
     ax.set(aspect="equal")
-    plt.tight_layout()
-    return fig
-
-def plot_savings_chart(region: str) -> plt.Figure:
-    """Line chart showing savings accumulation and emergency fund target over 6 months."""
-    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
-    base_savings = [500, 1000, 1500, 2000, 2500, 3000]
-    if region == "Italy":
-        savings = [s - 100 for s in base_savings]
-    elif region == "UK":
-        savings = [s + 100 for s in base_savings]
-    else:
-        savings = base_savings
-    target = 3500
-    
-    fig, ax = plt.subplots(figsize=(6, 4))
-    ax.plot(months, savings, marker='o', color='teal', label="Savings")
-    ax.axhline(target, color='red', linestyle='--', label="Target")
-    ax.set_title(f"Savings & Emergency Fund Progress in {region}")
-    ax.set_xlabel("Month")
-    ax.set_ylabel("Accumulated Savings ($)")
-    ax.legend()
     plt.tight_layout()
     return fig
 
@@ -309,16 +297,8 @@ def get_financial_goal_chart(project_type: str, spending_data: dict,
         return plot_budget_donut_chart(budget_goal)
     elif project_type == "Optimize currency exchange":
         return plot_currency_optimization_chart(spending_region)
-    elif project_type == "Monitor investment performance":
-        return plot_investment_performance_chart(spending_region)
-    elif project_type == "Track international transfers":
-        return plot_international_transfers_chart(spending_region)
-    elif project_type == "Optimize tax planning":
-        return plot_tax_planning_chart(spending_region)
     elif project_type == "Consolidate multi-currency accounts":
         return plot_multi_currency_chart()
-    elif project_type == "Track savings and emergency funds":
-        return plot_savings_chart(spending_region)
     else:
         return plot_spending_breakdown(spending_region, spending_data)
 
@@ -328,6 +308,10 @@ st.set_page_config(page_title="DECC Financial Insights", layout="wide")
 # ------------------------ Sidebar Inputs ------------------------ #
 st.sidebar.header("📊 Define Your Financial Project")
 ai_responses = get_ai_responses()
+
+# Debug: Display available financial goals for verification.
+st.sidebar.write("Available Financial Goals:", list(ai_responses.keys()))
+
 project_type = st.sidebar.selectbox("Select a financial goal:", list(ai_responses.keys()))
 
 st.sidebar.header("🌍 Select Spending Region")
@@ -364,6 +348,16 @@ st.pyplot(fig_goal, use_container_width=True)
 st.write("### 🤖 AI Insights")
 ai_message = ai_responses.get(project_type, {}).get(spending_region, "No insights available for this selection.")
 st.info(ai_message)
+
+# ------------------------ Actionable AI Insights Section ------------------------ #
+st.write("### 🛠 Actionable AI Insights")
+actionable_insights = get_actionable_insights()
+# Get the list of actionable insights for the selected goal and region
+goal_actionables = actionable_insights.get(project_type, {}).get(spending_region, [])
+selected_actionables = st.multiselect("Select actionable insights to view:", goal_actionables)
+if selected_actionables:
+    for insight in selected_actionables:
+        st.info(insight)
 
 # ------------------------ Additional Actionable Items ------------------------ #
 if project_type == "Track and analyze my spending habits":
