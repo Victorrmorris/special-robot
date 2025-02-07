@@ -190,11 +190,14 @@ budget_goal = st.sidebar.slider("Set a monthly budget limit ($)", min_value=500,
 
 # ------------------------ Live Query in Sidebar ------------------------ #
 st.sidebar.header("💬 Live Query")
-user_query = st.sidebar.text_input("Enter your query", "What are the best internet providers in Northern Italy?")
+user_query = st.sidebar.text_area(
+    "Enter your query", 
+    "What are the best internet providers in Northern Italy?", 
+    height=150
+)
 if st.sidebar.button("Get Live Insight"):
     if user_query.strip().lower() == "what are the best internet providers in northern italy?":
-        live_insight = ("Based on our dummy data, Fastweb and Vodafone offer the best deals and fastest speeds "
-                        "in Northern Italy.")
+        live_insight = ("Based on our dummy data, Fastweb and Vodafone offer the best deals and fastest speeds in Northern Italy.")
     else:
         live_insight = "Dummy insight: This feature is under development. Please try again with a different query."
     st.sidebar.write(live_insight)
