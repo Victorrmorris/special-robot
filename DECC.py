@@ -2,106 +2,138 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# ------------------------ PCS Data (Texas vs. Germany) ------------------------ #
-SPENDING_DATA = {
-    "Texas": {"Rent": 1500, "Groceries": 600, "Entertainment": 200, "Transportation": 300, "Utilities": 200},
-    "Germany": {"Rent": 1800, "Groceries": 700, "Entertainment": 150, "Transportation": 250, "Utilities": 250}
+# ------------------------ Pre-Move PCS Expense Categories ------------------------ #
+EXPENSE_CATEGORIES = {
+    "Reimbursable Expenses": {
+        "Flight Tickets": 1200,
+        "Hotel Stays (Temporary Lodging)": 800,
+        "Shipping Household Goods": 3000,
+        "Per Diem (Meals & Incidentals)": 500,
+        "Vehicle Shipment (If Approved)": 2500
+    },
+    "Non-Reimbursable Expenses": {
+        "Initial Rent & Deposit": 2000,
+        "Furniture & Appliances": 1500,
+        "Car Rental or Public Transport": 600,
+        "Cell Phone Setup": 150,
+        "Miscellaneous Fees": 400
+    }
 }
 
 AI_RESPONSES = {
-    "Plan my PCS move": {
-        "Germany": "Your highest expense in Germany will be rent. Consider securing on-base housing for cost savings. Also, expect higher grocery costs.",
-    },
-    "Compare my current vs. future costs": {
-        "Germany": "Rent is typically higher in Germany, but utility costs may be lower. Consider fuel-efficient vehicles or public transit to save on transportation."
-    },
-    "Set my PCS budget": {
-        "Germany": "Set aside extra funds for move-in costs such as deposits, furniture, and unexpected international fees."
-    },
-    "Optimize my overseas banking": {
-        "Germany": "Avoid high exchange fees by using a multi-currency account like Wise or Revolut for better conversion rates."
-    }
+    "Plan my PCS budget": "Consider separating reimbursable vs. non-reimbursable expenses. The military may cover flights, lodging, and per diem, but you will need to budget for housing deposits, furniture, and transportation.",
+    "Estimate moving costs": "A safe estimate for a PCS move to Germany is $6,000-$10,000, depending on family size and lifestyle adjustments. Plan for initial rent deposits and setup costs.",
+    "Track reimbursable expenses": "Keep all receipts and documentation for flights, lodging, and per diem. Submit your travel claim promptly to receive reimbursement faster.",
+    "Reduce out-of-pocket expenses": "Consider furnished housing to save on furniture costs. Use on-base resources like loan closets to borrow temporary household goods."
 }
 
 # ------------------------ Helper Functions ------------------------ #
 @st.cache_data
-def get_spending_data():
-    """Returns the PCS spending data dictionary."""
-    return SPENDING_DATA
+def get_expense_data():
+    """Returns the PCS expense categories dictionary."""
+    return EXPENSE_CATEGORIES
 
 @st.cache_data
 def get_ai_responses():
     """Returns the AI responses dictionary."""
     return AI_RESPONSES
 
-def plot_spending_comparison(spending_data):
-    """Generate a side-by-side cost comparison (Texas vs. Germany)."""
-    df = pd.DataFrame(spending_data).T  # Transpose for better visualization
-
-    fig, ax = plt.subplots(figsize=(7, 4))
-    df.plot(kind="bar", ax=ax)
-    ax.set_title("Cost Comparison: Texas vs. Germany")
-    ax.set_ylabel("Monthly Expense ($)")
-    ax.legend(title="Category")
-    plt.xticks(rotation=0)
-    plt.tight_layout()
+def plot_expense_breakdown(expenses):
+    """Generate a bar chart for PCS expense breakdown."""
+    df = pd.DataFrame(expenses.items(), columns=["Category", "Amount"])
     
+    fig, ax = plt.subplots(figsize=(7, 4))
+    bars = ax.bar(df["Category"], df["Amount"], color=["#4CAF50" if "Reimbursable" in expenses else "#FF5733" for _ in df["Category"]])
+    ax.set_title("PCS Expense Breakdown")
+    ax.set_xlabel("Category")
+    ax.set_ylabel("Estimated Cost ($)")
+    plt.xticks(rotation=45, ha="right")
+    
+    # Add value labels on bars
+    for bar in bars:
+        height = bar.get_height()
+        ax.annotate(f"${int(height)}", xy=(bar.get_x() + bar.get_width() / 2, height), xytext=(0, 3),
+                    textcoords="offset points", ha="center", va="bottom")
+    
+    plt.tight_layout()
     return fig
 
-def display_budget_tracking(budget_goal: int, spending: dict):
-    """Tracks PCS budget usage and gives feedback."""
-    total_spent = sum(spending.values())
-    remaining_budget = budget_goal - total_spent
-    percentage_used = min(total_spent / budget_goal, 1.0)
-
-    st.write("### 📊 PCS Budget Tracking")
+def display_budget_summary(reimbursable, non_reimbursable, user_budget):
+    """Summarizes the user's PCS budget, showing total estimates vs. user input."""
+    total_reimbursable = sum(reimbursable.values())
+    total_non_reimbursable = sum(non_reimbursable.values())
+    total_estimated_cost = total_reimbursable + total_non_reimbursable
+    
+    st.write("### 📊 PCS Budget Summary")
     
     col_left, col_right = st.columns(2)
     
     with col_left:
-        st.subheader("Budget Overview")
-        st.metric(
-            label="Total Spent", 
-            value=f"${total_spent:.2f}", 
-            delta=f"${remaining_budget:.2f}"
-        )
+        st.metric(label="Estimated Reimbursable Costs", value=f"${total_reimbursable}")
+        st.metric(label="Estimated Non-Reimbursable Costs", value=f"${total_non_reimbursable}")
+        st.metric(label="Total Estimated PCS Cost", value=f"${total_estimated_cost}")
+    
+    with col_right:
+        remaining_budget = user_budget - total_non_reimbursable
+        percentage_used = min(total_non_reimbursable / user_budget, 1.0)
+        
+        st.metric(label="Your PCS Budget", value=f"${user_budget}")
+        st.metric(label="Remaining After Non-Reimbursable", value=f"${remaining_budget}")
+
         st.progress(percentage_used)
 
-        if total_spent > budget_goal:
-            st.error(f"🚨 You've exceeded your PCS budget by ${total_spent - budget_goal:.2f}.")
-        elif total_spent < budget_goal * 0.5:
-            st.info(f"👍 You're managing well—only {total_spent / budget_goal * 100:.1f}% of your budget used.")
+        if total_non_reimbursable > user_budget:
+            st.error(f"🚨 Your budget is short by ${total_non_reimbursable - user_budget}. Consider adjusting your plan.")
         else:
-            st.warning(f"⚠️ Be cautious—you're at {total_spent / budget_goal * 100:.1f}% of your budget.")
+            st.success(f"✅ You have ${remaining_budget} left in your budget after non-reimbursable costs.")
 
 # ------------------------ Streamlit App Config ------------------------ #
-st.set_page_config(page_title="PCS Financial Planner", layout="wide")
+st.set_page_config(page_title="PCS Budget Planner", layout="wide")
 
 # ------------------------ Sidebar Inputs ------------------------ #
-st.sidebar.header("✈️ PCS Financial Planning")
+st.sidebar.header("✈️ Plan Your PCS Budget")
 ai_responses = get_ai_responses()
-project_type = st.sidebar.selectbox("Select a PCS-related goal:", list(ai_responses.keys()))
-
-st.sidebar.header("🌍 Compare Costs: Texas vs. Germany")
-spending_data = get_spending_data()
-selected_region = "Germany"  # Always comparing Texas to Germany for this PCS case
+budgeting_goal = st.sidebar.selectbox("Select a budgeting goal:", list(ai_responses.keys()))
 
 st.sidebar.header("💰 Set Your PCS Budget")
-budget_goal = st.sidebar.slider("Set your transition budget ($)", min_value=1000, max_value=10000, step=500)
+user_budget = st.sidebar.slider("Enter your estimated PCS budget ($)", min_value=5000, max_value=15000, step=500)
 
 # ------------------------ Main Layout ------------------------ #
-st.title("🇺🇸 ➡️ 🇩🇪 Military PCS Financial Planner")
-st.subheader(f"📍 Texas vs. {selected_region} - {project_type}")
+st.title("🇺🇸 ➡️ 🇩🇪 Military PCS Budget Planner")
+st.subheader(f"📍 {budgeting_goal}")
 
-# Layout with two columns: one for the spending breakdown and one for AI insights.
-col_chart, col_insights = st.columns([2, 1])
+# Layout: Reimbursable vs. Non-Reimbursable Expenses
+col_left, col_right = st.columns([1, 1])
 
-with col_chart:
-    st.write("### 📊 Cost Comparison: Texas vs. Germany")
-    fig = plot_spending_comparison(spending_data)
-    st.pyplot(fig, use_container_width=True)
+expense_data = get_expense_data()
+with col_left:
+    st.write("### ✅ Reimbursable Expenses")
+    fig_reimb = plot_expense_breakdown(expense_data["Reimbursable Expenses"])
+    st.pyplot(fig_reimb, use_container_width=True)
 
-with col_insights:
-    st.write("### 🤖 AI-Powered PCS Tips")
-    ai_message = ai_responses.get(project_type, {}).get(selected_region, "No insights available for this selection.")
-    st.info(ai_message)
+with col_right:
+    st.write("### ❌ Non-Reimbursable Expenses")
+    fig_non_reimb = plot_expense_breakdown(expense_data["Non-Reimbursable Expenses"])
+    st.pyplot(fig_non_reimb, use_container_width=True)
+
+# ------------------------ Budget Summary ------------------------ #
+display_budget_summary(expense_data["Reimbursable Expenses"], expense_data["Non-Reimbursable Expenses"], user_budget)
+
+# ------------------------ AI-Powered PCS Insights ------------------------ #
+st.write("### 🤖 AI-Generated PCS Budgeting Tips")
+st.info(ai_responses.get(budgeting_goal, "No insights available for this selection."))
+
+# ------------------------ Actionable Checklist ------------------------ #
+st.write("### ✅ PCS Budget Planning Checklist")
+st.markdown("""
+- 📝 **Create a PCS budget plan** separating reimbursable vs. non-reimbursable expenses.
+- 📄 **Keep all receipts** for travel claims to ensure timely reimbursements.
+- 🏠 **Research housing options**—on-base vs. off-base to reduce rent costs.
+- 🚗 **Plan for transportation**—will you ship a car or buy locally?
+- 💳 **Open an overseas-friendly bank account** to avoid exchange fees.
+- 📦 **Decide what to ship** and what to sell/store before moving.
+""")
+
+# ------------------------ Footer ------------------------ #
+st.markdown("---")
+st.markdown("🔒 **DECC provides financial intelligence for U.S. military and expats moving overseas.**")
