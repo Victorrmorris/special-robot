@@ -4,9 +4,27 @@ import matplotlib.pyplot as plt
 
 # ------------------------ Dummy Data ------------------------ #
 SPENDING_DATA = {
-    "Germany": {"Rent": 1800, "Groceries": 700, "Entertainment": 150, "Transportation": 200, "Utilities": 250},
-    "Italy": {"Rent": 1600, "Groceries": 650, "Entertainment": 200, "Transportation": 180, "Utilities": 230},
-    "UK": {"Rent": 1900, "Groceries": 750, "Entertainment": 250, "Transportation": 220, "Utilities": 300},
+    "Germany": {
+        "Rent": 1800,
+        "Groceries": 700,
+        "Entertainment": 150,
+        "Transportation": 200,
+        "Utilities": 250
+    },
+    "Italy": {
+        "Rent": 1600,
+        "Groceries": 650,
+        "Entertainment": 200,
+        "Transportation": 180,
+        "Utilities": 230
+    },
+    "UK": {
+        "Rent": 1900,
+        "Groceries": 750,
+        "Entertainment": 250,
+        "Transportation": 220,
+        "Utilities": 300
+    },
 }
 
 AI_RESPONSES = {
@@ -44,7 +62,7 @@ def get_ai_responses():
     return AI_RESPONSES
 
 def plot_spending_breakdown(region: str, spending_data: dict) -> plt.Figure:
-    """Generate a bar chart for the spending breakdown of the selected region."""
+    """Bar chart for spending breakdown."""
     spending = spending_data.get(region, {})
     df = pd.DataFrame(list(spending.items()), columns=["Category", "Amount"])
     
@@ -65,29 +83,110 @@ def plot_spending_breakdown(region: str, spending_data: dict) -> plt.Figure:
             ha="center",
             va="bottom"
         )
+    plt.tight_layout()
+    return fig
+
+def plot_expense_reduction_chart(spending: dict) -> plt.Figure:
+    """Grouped bar chart comparing current spending vs. a 10% reduction."""
+    categories = list(spending.keys())
+    current_spending = [spending[cat] for cat in categories]
+    # Assume a 10% reduction target
+    reduced_spending = [amt * 0.9 for amt in current_spending]
+    
+    fig, ax = plt.subplots(figsize=(6, 4))
+    width = 0.35
+    indices = range(len(categories))
+    
+    ax.bar([i - width/2 for i in indices], current_spending, width=width,
+           label='Current', color='salmon')
+    ax.bar([i + width/2 for i in indices], reduced_spending, width=width,
+           label='Reduced (10%)', color='lightgreen')
+    
+    ax.set_xlabel("Category")
+    ax.set_ylabel("Amount ($)")
+    ax.set_title("Expense Reduction Potential")
+    ax.set_xticks(indices)
+    ax.set_xticklabels(categories)
+    ax.legend()
     
     plt.tight_layout()
     return fig
 
+def plot_budget_usage_chart(budget_goal: int, spending: dict) -> plt.Figure:
+    """Horizontal bar chart showing spent vs. remaining budget."""
+    total_spent = sum(spending.values())
+    fig, ax = plt.subplots(figsize=(6, 1.5))
+    ax.barh(0, total_spent, color='salmon', height=0.5, label='Spent')
+    ax.barh(0, budget_goal - total_spent, left=total_spent, color='lightgreen',
+            height=0.5, label='Remaining')
+    ax.set_xlim(0, budget_goal)
+    ax.set_yticks([])
+    ax.set_title("Budget Usage")
+    ax.set_xlabel("Amount ($)")
+    ax.legend()
+    plt.tight_layout()
+    return fig
+
+def plot_currency_optimization_chart(region: str) -> plt.Figure:
+    """
+    Dummy bar chart for currency exchange optimization.
+    Simulates current vs. optimized exchange rates for the selected region.
+    """
+    # Dummy exchange rate data for demonstration purposes.
+    data = {
+        "Germany": {"Current Rate": 1.00, "Optimized Rate": 0.98},
+        "Italy": {"Current Rate": 1.00, "Optimized Rate": 0.97},
+        "UK": {"Current Rate": 1.00, "Optimized Rate": 0.99}
+    }
+    region_data = data.get(region, {"Current Rate": 1.00, "Optimized Rate": 1.00})
+    categories = list(region_data.keys())
+    rates = list(region_data.values())
+    
+    fig, ax = plt.subplots(figsize=(6, 4))
+    bars = ax.bar(categories, rates, color=['skyblue', 'lightgreen'])
+    ax.set_title(f"Currency Exchange Optimization for {region}")
+    ax.set_ylabel("Exchange Rate")
+    
+    for bar in bars:
+        height = bar.get_height()
+        ax.annotate(f'{height:.2f}',
+                    xy=(bar.get_x() + bar.get_width() / 2, height),
+                    xytext=(0, 3),
+                    textcoords="offset points",
+                    ha="center", va="bottom")
+    plt.tight_layout()
+    return fig
+
+def get_financial_goal_chart(project_type: str, spending_data: dict,
+                             spending_region: str, budget_goal: int) -> plt.Figure:
+    """
+    Returns the appropriate chart based on the selected financial goal.
+    """
+    spending = spending_data.get(spending_region, {})
+    if project_type == "Track and analyze my spending habits":
+        return plot_spending_breakdown(spending_region, spending_data)
+    elif project_type == "Reduce my expenses":
+        return plot_expense_reduction_chart(spending)
+    elif project_type == "Set a monthly budget":
+        return plot_budget_usage_chart(budget_goal, spending)
+    elif project_type == "Optimize currency exchange":
+        return plot_currency_optimization_chart(spending_region)
+    else:
+        return plot_spending_breakdown(spending_region, spending_data)
+
 def display_budget_tracking(budget_goal: int, spending: dict):
     """
-    Displays a streamlined budget tracking section with:
-      - A metric for total spent and remaining budget.
-      - A progress bar visualizing budget usage.
-      - A donut chart for the budget distribution.
-      - Conditional messaging based on spending levels.
+    Displays the budget tracking section with:
+      - A metric, progress bar, and conditional messaging.
+      - A secondary visualization (here we re-use the budget usage chart).
     """
     total_spent = sum(spending.values())
     remaining_budget = budget_goal - total_spent
-    # Calculate percentage used (capped at 100% for display)
     percentage_used = min(total_spent / budget_goal, 1.0)
     
     st.write("### 📊 Budget Tracking")
-    
-    # Layout for numeric info and visual feedback
     col_left, col_right = st.columns(2)
     
-    # Left column: Metric and progress bar with conditional messaging
     with col_left:
         st.subheader("Budget Overview")
         st.metric(
@@ -104,34 +203,10 @@ def display_budget_tracking(budget_goal: int, spending: dict):
         else:
             st.warning(f"⚠️ You're nearing your budget limit with {total_spent / budget_goal * 100:.1f}% spent.")
     
-    # Right column: Donut chart visualization
     with col_right:
         st.subheader("Budget Distribution")
-        plot_budget_donut(budget_goal, total_spent)
-
-def plot_budget_donut(budget_goal: int, total_spent: float):
-    """
-    Plots a donut chart showing the split between the amount spent and the remaining budget.
-    """
-    remaining = max(budget_goal - total_spent, 0)
-    sizes = [total_spent, remaining]
-    labels = ["Spent", "Remaining"]
-    colors = ["#FF6B6B", "#4ECDC4"]
-    
-    fig, ax = plt.subplots(figsize=(4, 4))
-    ax.pie(
-        sizes, 
-        labels=labels, 
-        autopct='%1.1f%%', 
-        startangle=90, 
-        counterclock=False,
-        colors=colors,
-        wedgeprops=dict(width=0.3)  # Creates a donut chart effect
-    )
-    ax.set(aspect="equal")
-    ax.set_title("Budget Distribution")
-    plt.tight_layout()
-    st.pyplot(fig, use_container_width=True)
+        fig = plot_budget_usage_chart(budget_goal, spending)
+        st.pyplot(fig, use_container_width=True)
 
 # ------------------------ Streamlit App Config ------------------------ #
 st.set_page_config(page_title="DECC Financial Insights", layout="wide")
@@ -152,20 +227,17 @@ budget_goal = st.sidebar.slider("Set a monthly budget limit ($)", min_value=500,
 st.title("💰 DECC Financial Insights Dashboard")
 st.subheader(f"📍 {spending_region} - {project_type}")
 
-# Layout with two columns: one for the spending breakdown and one for AI insights.
-col_chart, col_insights = st.columns([2, 1])
+# Display a chart based on the selected financial goal.
+st.write("### 📊 Financial Goal Analysis")
+fig_goal = get_financial_goal_chart(project_type, spending_data, spending_region, budget_goal)
+st.pyplot(fig_goal, use_container_width=True)
 
-with col_chart:
-    st.write("### 📊 Spending Breakdown")
-    fig = plot_spending_breakdown(spending_region, spending_data)
-    st.pyplot(fig, use_container_width=True)
+# Display AI Insights.
+st.write("### 🤖 AI Insights")
+ai_message = ai_responses.get(project_type, {}).get(spending_region, "No insights available for this selection.")
+st.info(ai_message)
 
-with col_insights:
-    st.write("### 🤖 AI Insights")
-    ai_message = ai_responses.get(project_type, {}).get(spending_region, "No insights available for this selection.")
-    st.info(ai_message)
-
-# ------------------------ Budget Tracking ------------------------ #
+# Display the budget tracking section.
 region_spending = spending_data.get(spending_region, {})
 display_budget_tracking(budget_goal, region_spending)
 
