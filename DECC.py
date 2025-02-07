@@ -120,14 +120,13 @@ def plot_budget_donut_chart(budget_goal: int) -> plt.Figure:
       - Savings: 20%
     The chart calculates the dollar amount for each segment based on the default budget target.
     """
-    # Recommended allocations in percentages
     allocations = {"Needs": 50, "Wants": 30, "Savings": 20}
     amounts = [budget_goal * pct / 100 for pct in allocations.values()]
     labels = [f"{cat} ({pct}%)" for cat, pct in allocations.items()]
     colors = ["gold", "lightcoral", "lightskyblue"]
     
     fig, ax = plt.subplots(figsize=(6, 4))
-    wedges, texts, autotexts = ax.pie(
+    ax.pie(
         amounts, 
         labels=labels, 
         autopct=lambda pct: f"${budget_goal * pct / 100:.0f}",
@@ -230,6 +229,14 @@ st.pyplot(fig_goal, use_container_width=True)
 st.write("### 🤖 AI Insights")
 ai_message = ai_responses.get(project_type, {}).get(spending_region, "No insights available for this selection.")
 st.info(ai_message)
+
+# Additional actionable item for "Set a monthly budget"
+if project_type == "Set a monthly budget":
+    if st.checkbox("Would you like to set a budget based on your monthly income?"):
+        monthly_income = st.number_input("Enter your monthly income ($)", min_value=100, value=3000, key="income_input")
+        # For example, recommend a budget based on 70% of monthly income.
+        recommended_budget = monthly_income * 0.7
+        st.write(f"Based on your monthly income of ${monthly_income}, your recommended monthly budget is ${recommended_budget:.2f}.")
 
 # Example actionable item for Italy in "Track and analyze my spending habits"
 if project_type == "Track and analyze my spending habits" and spending_region == "Italy":
