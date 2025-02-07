@@ -118,7 +118,7 @@ def plot_budget_donut_chart(budget_goal: int) -> plt.Figure:
       - Needs: 50%
       - Wants: 30%
       - Savings: 20%
-    Dollar amounts are calculated from the default budget target.
+    The chart calculates the dollar amount for each segment based on the default budget target.
     """
     allocations = {"Needs": 50, "Wants": 30, "Savings": 20}
     amounts = [budget_goal * pct / 100 for pct in allocations.values()]
@@ -179,6 +179,7 @@ def get_financial_goal_chart(project_type: str, spending_data: dict,
     elif project_type == "Reduce my expenses":
         return plot_expense_reduction_chart(spending)
     elif project_type == "Set a monthly budget":
+        # Use the donut chart based on AI-recommended allocations.
         return plot_budget_donut_chart(budget_goal)
     elif project_type == "Optimize currency exchange":
         return plot_currency_optimization_chart(spending_region)
@@ -224,46 +225,30 @@ st.write("### 📊 Financial Goal Analysis")
 fig_goal = get_financial_goal_chart(project_type, spending_data, spending_region, budget_goal)
 st.pyplot(fig_goal, use_container_width=True)
 
-# Display AI Insights.
+# Display AI Insights with actionable items.
 st.write("### 🤖 AI Insights")
 ai_message = ai_responses.get(project_type, {}).get(spending_region, "No insights available for this selection.")
 st.info(ai_message)
 
-# ------------------------ Additional Actionable Items ------------------------ #
-if project_type == "Track and analyze my spending habits":
-    if st.checkbox("Would you like to see a detailed table of your spending data?"):
-        df_data = pd.DataFrame(
-            list(spending_data.get(spending_region, {}).items()),
-            columns=["Category", "Amount"]
-        )
-        st.table(df_data)
-
-if project_type == "Reduce my expenses":
-    if st.checkbox("Would you like to see potential cost-saving alternatives?"):
-        cost_savings_data = {
-            "Expense Category": ["Groceries", "Entertainment", "Transportation", "Utilities"],
-            "Suggested Savings": [
-                "Save $50 by buying in bulk",
-                "Cut $20 by reducing subscriptions",
-                "Save $30 with public transit",
-                "Reduce $15 by conserving energy"
-            ]
-        }
-        st.table(pd.DataFrame(cost_savings_data))
-
+# Additional actionable item for "Set a monthly budget"
 if project_type == "Set a monthly budget":
     if st.checkbox("Would you like to set a budget based on your monthly income?"):
         monthly_income = st.number_input("Enter your monthly income ($)", min_value=100, value=3000, key="income_input")
+        # For example, recommend a budget based on 70% of monthly income.
         recommended_budget = monthly_income * 0.7
         st.write(f"Based on your monthly income of ${monthly_income}, your recommended monthly budget is ${recommended_budget:.2f}.")
 
-if project_type == "Optimize currency exchange":
-    if st.checkbox("Would you like to see a comparison of exchange fees among popular providers?"):
-        provider_data = {
-            "Provider": ["Wise", "Revolut", "Monzo", "Local Bank"],
-            "Fee": ["1.5%", "1.0%", "1.2%", "3.0%"]
+# Example actionable item for Italy in "Track and analyze my spending habits"
+if project_type == "Track and analyze my spending habits" and spending_region == "Italy":
+    st.write("Would you like a comparison of local markets in your area?")
+    if st.button("Compare Local Markets"):
+        # Dummy local markets comparison data
+        market_data = {
+            "Market": ["Local Market A", "Local Market B", "Supermarket"],
+            "Average Price Index": [90, 95, 100]
         }
-        st.table(pd.DataFrame(provider_data))
+        df_markets = pd.DataFrame(market_data)
+        st.table(df_markets)
 
 # ------------------------ Footer ------------------------ #
 st.markdown("---")
