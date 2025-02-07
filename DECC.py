@@ -185,8 +185,9 @@ st.sidebar.header("🌍 Select Spending Region")
 spending_data = get_spending_data()
 spending_region = st.sidebar.selectbox("Choose a region:", list(spending_data.keys()))
 
-st.sidebar.header("🎯 Set Spending Target")
-budget_goal = st.sidebar.slider("Set a monthly budget limit ($)", min_value=500, max_value=3000, step=100)
+# Note: The "Set Spending Target" slider has been removed.
+# A default budget target is used instead.
+budget_goal = 2000  # Default budget target
 
 # ------------------------ Live Query in Sidebar ------------------------ #
 st.sidebar.header("💬 Live Query")
