@@ -174,40 +174,6 @@ def get_financial_goal_chart(project_type: str, spending_data: dict,
     else:
         return plot_spending_breakdown(spending_region, spending_data)
 
-def display_budget_tracking(budget_goal: int, spending: dict):
-    """
-    Displays the budget tracking section with:
-      - A metric, progress bar, and conditional messaging.
-      - A secondary visualization (here we re-use the budget usage chart).
-    """
-    total_spent = sum(spending.values())
-    remaining_budget = budget_goal - total_spent
-    percentage_used = min(total_spent / budget_goal, 1.0)
-    
-    st.write("### 📊 Budget Tracking")
-    col_left, col_right = st.columns(2)
-    
-    with col_left:
-        st.subheader("Budget Overview")
-        st.metric(
-            label="Total Spent", 
-            value=f"${total_spent:.2f}", 
-            delta=f"${remaining_budget:.2f}"
-        )
-        st.progress(percentage_used)
-        
-        if total_spent > budget_goal:
-            st.error(f"🚨 You've exceeded your budget by ${total_spent - budget_goal:.2f}.")
-        elif total_spent < budget_goal * 0.5:
-            st.info(f"👍 Great job! You've only used {total_spent / budget_goal * 100:.1f}% of your budget.")
-        else:
-            st.warning(f"⚠️ You're nearing your budget limit with {total_spent / budget_goal * 100:.1f}% spent.")
-    
-    with col_right:
-        st.subheader("Budget Distribution")
-        fig = plot_budget_usage_chart(budget_goal, spending)
-        st.pyplot(fig, use_container_width=True)
-
 # ------------------------ Streamlit App Config ------------------------ #
 st.set_page_config(page_title="DECC Financial Insights", layout="wide")
 
@@ -236,10 +202,6 @@ st.pyplot(fig_goal, use_container_width=True)
 st.write("### 🤖 AI Insights")
 ai_message = ai_responses.get(project_type, {}).get(spending_region, "No insights available for this selection.")
 st.info(ai_message)
-
-# Display the budget tracking section.
-region_spending = spending_data.get(spending_region, {})
-display_budget_tracking(budget_goal, region_spending)
 
 # ------------------------ Footer ------------------------ #
 st.markdown("---")
