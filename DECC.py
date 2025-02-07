@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 
+# Use a modern, clean style for all charts.
+plt.style.use('seaborn-whitegrid')
+
 # ------------------------ Dummy Data ------------------------ #
 SPENDING_DATA = {
     "Germany": {
@@ -67,22 +70,26 @@ def plot_spending_breakdown(region: str, spending_data: dict) -> plt.Figure:
     spending = spending_data.get(region, {})
     df = pd.DataFrame(list(spending.items()), columns=["Category", "Amount"])
     
-    fig, ax = plt.subplots(figsize=(6, 4))
-    bars = ax.bar(df["Category"], df["Amount"], color="skyblue")
-    ax.set_title(f"Spending Breakdown in {region}")
-    ax.set_xlabel("Category")
-    ax.set_ylabel("Amount ($)")
+    fig, ax = plt.subplots(figsize=(8, 5))
+    bars = ax.bar(df["Category"], df["Amount"], color="#4c72b0")
+    ax.set_title(f"Spending Breakdown in {region}", fontsize=16, fontweight="bold")
+    ax.set_xlabel("Category", fontsize=12)
+    ax.set_ylabel("Amount ($)", fontsize=12)
+    ax.grid(axis="y", linestyle="--", alpha=0.7)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
     
-    # Add value labels on top of each bar
+    # Add formatted value labels on top of each bar
     for bar in bars:
         height = bar.get_height()
         ax.annotate(
-            f'{height}',
+            f'${height:,.0f}',
             xy=(bar.get_x() + bar.get_width() / 2, height),
-            xytext=(0, 3),
+            xytext=(0, 5),
             textcoords="offset points",
             ha="center",
-            va="bottom"
+            va="bottom",
+            fontsize=10
         )
     plt.tight_layout()
     return fig
@@ -93,21 +100,34 @@ def plot_expense_reduction_chart(spending: dict) -> plt.Figure:
     current_spending = [spending[cat] for cat in categories]
     reduced_spending = [amt * 0.9 for amt in current_spending]
     
-    fig, ax = plt.subplots(figsize=(6, 4))
+    fig, ax = plt.subplots(figsize=(8, 5))
     width = 0.35
     indices = range(len(categories))
     
-    ax.bar([i - width/2 for i in indices], current_spending, width=width,
-           label='Current', color='salmon')
-    ax.bar([i + width/2 for i in indices], reduced_spending, width=width,
-           label='Reduced (10%)', color='lightgreen')
+    bars_current = ax.bar([i - width/2 for i in indices], current_spending, width=width,
+           label='Current', color="#4c72b0")
+    bars_reduced = ax.bar([i + width/2 for i in indices], reduced_spending, width=width,
+           label='Reduced (10%)', color="#55a868")
     
-    ax.set_xlabel("Category")
-    ax.set_ylabel("Amount ($)")
-    ax.set_title("Expense Reduction Potential")
+    ax.set_xlabel("Category", fontsize=12)
+    ax.set_ylabel("Amount ($)", fontsize=12)
+    ax.set_title("Expense Reduction Potential", fontsize=16, fontweight="bold")
     ax.set_xticks(indices)
-    ax.set_xticklabels(categories)
-    ax.legend()
+    ax.set_xticklabels(categories, fontsize=10)
+    ax.legend(fontsize=10)
+    ax.grid(axis="y", linestyle="--", alpha=0.7)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    
+    # Annotate each bar with its value
+    for container in (bars_current, bars_reduced):
+        for bar in container:
+            height = bar.get_height()
+            ax.annotate(f'${height:,.0f}',
+                        xy=(bar.get_x() + bar.get_width()/2, height),
+                        xytext=(0, 3),
+                        textcoords="offset points",
+                        ha="center", va="bottom", fontsize=9)
     
     plt.tight_layout()
     return fig
@@ -123,19 +143,23 @@ def plot_budget_donut_chart(budget_goal: int) -> plt.Figure:
     allocations = {"Needs": 50, "Wants": 30, "Savings": 20}
     amounts = [budget_goal * pct / 100 for pct in allocations.values()]
     labels = [f"{cat} ({pct}%)" for cat, pct in allocations.items()]
-    colors = ["gold", "lightcoral", "lightskyblue"]
+    colors = ["#4c72b0", "#55a868", "#c44e52"]
     
-    fig, ax = plt.subplots(figsize=(6, 4))
-    ax.pie(
+    fig, ax = plt.subplots(figsize=(8, 5))
+    wedges, texts, autotexts = ax.pie(
         amounts, 
         labels=labels, 
-        autopct=lambda pct: f"${budget_goal * pct / 100:.0f}",
+        autopct=lambda pct: f'${budget_goal * pct / 100:.0f}',
         startangle=90,
         colors=colors,
-        wedgeprops=dict(width=0.4)
+        wedgeprops=dict(width=0.4, edgecolor='w')
     )
-    ax.set_title("Budget Allocation (Needs: 50%, Wants: 30%, Savings: 20%)")
+    plt.setp(texts, size=10)
+    plt.setp(autotexts, size=10, weight="bold", color="white")
+    
+    ax.set_title("Budget Allocation (Needs: 50%, Wants: 30%, Savings: 20%)", fontsize=16, fontweight="bold")
     ax.set(aspect="equal")
+    
     plt.tight_layout()
     return fig
 
@@ -153,10 +177,13 @@ def plot_currency_optimization_chart(region: str) -> plt.Figure:
     categories = list(region_data.keys())
     rates = list(region_data.values())
     
-    fig, ax = plt.subplots(figsize=(6, 4))
-    bars = ax.bar(categories, rates, color=['skyblue', 'lightgreen'])
-    ax.set_title(f"Currency Exchange Optimization for {region}")
-    ax.set_ylabel("Exchange Rate")
+    fig, ax = plt.subplots(figsize=(8, 5))
+    bars = ax.bar(categories, rates, color=["#4c72b0", "#55a868"])
+    ax.set_title(f"Currency Exchange Optimization for {region}", fontsize=16, fontweight="bold")
+    ax.set_ylabel("Exchange Rate", fontsize=12)
+    ax.grid(axis="y", linestyle="--", alpha=0.7)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
     
     for bar in bars:
         height = bar.get_height()
@@ -164,7 +191,7 @@ def plot_currency_optimization_chart(region: str) -> plt.Figure:
                     xy=(bar.get_x() + bar.get_width() / 2, height),
                     xytext=(0, 3),
                     textcoords="offset points",
-                    ha="center", va="bottom")
+                    ha="center", va="bottom", fontsize=10)
     plt.tight_layout()
     return fig
 
