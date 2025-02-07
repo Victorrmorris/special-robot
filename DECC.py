@@ -112,18 +112,31 @@ def plot_expense_reduction_chart(spending: dict) -> plt.Figure:
     plt.tight_layout()
     return fig
 
-def plot_budget_usage_chart(budget_goal: int, spending: dict) -> plt.Figure:
-    """Horizontal bar chart showing spent vs. remaining budget."""
-    total_spent = sum(spending.values())
-    fig, ax = plt.subplots(figsize=(6, 1.5))
-    ax.barh(0, total_spent, color='salmon', height=0.5, label='Spent')
-    ax.barh(0, budget_goal - total_spent, left=total_spent, color='lightgreen',
-            height=0.5, label='Remaining')
-    ax.set_xlim(0, budget_goal)
-    ax.set_yticks([])
-    ax.set_title("Budget Usage")
-    ax.set_xlabel("Amount ($)")
-    ax.legend()
+def plot_budget_donut_chart(budget_goal: int) -> plt.Figure:
+    """
+    Donut chart showing the AI-recommended allocations:
+      - Needs: 50%
+      - Wants: 30%
+      - Savings: 20%
+    The chart calculates the dollar amount for each segment based on the default budget target.
+    """
+    # Recommended allocations in percentages
+    allocations = {"Needs": 50, "Wants": 30, "Savings": 20}
+    amounts = [budget_goal * pct / 100 for pct in allocations.values()]
+    labels = [f"{cat} ({pct}%)" for cat, pct in allocations.items()]
+    colors = ["gold", "lightcoral", "lightskyblue"]
+    
+    fig, ax = plt.subplots(figsize=(6, 4))
+    wedges, texts, autotexts = ax.pie(
+        amounts, 
+        labels=labels, 
+        autopct=lambda pct: f"${budget_goal * pct / 100:.0f}",
+        startangle=90,
+        colors=colors,
+        wedgeprops=dict(width=0.4)
+    )
+    ax.set_title("Budget Allocation (Needs: 50%, Wants: 30%, Savings: 20%)")
+    ax.set(aspect="equal")
     plt.tight_layout()
     return fig
 
@@ -167,7 +180,8 @@ def get_financial_goal_chart(project_type: str, spending_data: dict,
     elif project_type == "Reduce my expenses":
         return plot_expense_reduction_chart(spending)
     elif project_type == "Set a monthly budget":
-        return plot_budget_usage_chart(budget_goal, spending)
+        # Use the donut chart based on AI-recommended allocations.
+        return plot_budget_donut_chart(budget_goal)
     elif project_type == "Optimize currency exchange":
         return plot_currency_optimization_chart(spending_region)
     else:
