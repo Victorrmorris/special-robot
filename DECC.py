@@ -30,7 +30,8 @@ SPENDING_DATA = {
 AI_RESPONSES = {
     "Track and analyze my spending habits": {
         "Germany": "Your highest expense in Germany is rent, followed by groceries. Consider adjusting entertainment spending for better savings.",
-        "Italy": "Housing and groceries take up the majority of your spending in Italy. Look into local markets for better grocery savings.",
+        "Italy": ("Housing and groceries take up the majority of your spending in Italy. Look into local markets for better grocery savings. "
+                  "Would you like a comparison of local markets in your area?"),
         "UK": "Rent in the UK is a significant portion of your budget. Public transport passes might help reduce overall travel expenses."
     },
     "Reduce my expenses": {
@@ -90,7 +91,6 @@ def plot_expense_reduction_chart(spending: dict) -> plt.Figure:
     """Grouped bar chart comparing current spending vs. a 10% reduction."""
     categories = list(spending.keys())
     current_spending = [spending[cat] for cat in categories]
-    # Assume a 10% reduction target
     reduced_spending = [amt * 0.9 for amt in current_spending]
     
     fig, ax = plt.subplots(figsize=(6, 4))
@@ -132,7 +132,6 @@ def plot_currency_optimization_chart(region: str) -> plt.Figure:
     Dummy bar chart for currency exchange optimization.
     Simulates current vs. optimized exchange rates for the selected region.
     """
-    # Dummy exchange rate data for demonstration purposes.
     data = {
         "Germany": {"Current Rate": 1.00, "Optimized Rate": 0.98},
         "Italy": {"Current Rate": 1.00, "Optimized Rate": 0.97},
@@ -183,7 +182,7 @@ ai_responses = get_ai_responses()
 project_type = st.sidebar.selectbox("Select a financial goal:", list(ai_responses.keys()))
 
 st.sidebar.header("🌍 Select Spending Region")
-spending_data = get_spending_data()  # Ensure spending_data is defined as a dictionary
+spending_data = get_spending_data()
 spending_region = st.sidebar.selectbox("Choose a region:", list(spending_data.keys()))
 
 st.sidebar.header("🎯 Set Spending Target")
@@ -193,15 +192,27 @@ budget_goal = st.sidebar.slider("Set a monthly budget limit ($)", min_value=500,
 st.title("💰 DECC Financial Insights Dashboard")
 st.subheader(f"📍 {spending_region} - {project_type}")
 
-# Display a chart based on the selected financial goal.
+# Display the selected financial goal chart.
 st.write("### 📊 Financial Goal Analysis")
 fig_goal = get_financial_goal_chart(project_type, spending_data, spending_region, budget_goal)
 st.pyplot(fig_goal, use_container_width=True)
 
-# Display AI Insights.
+# Display AI Insights with actionable items.
 st.write("### 🤖 AI Insights")
 ai_message = ai_responses.get(project_type, {}).get(spending_region, "No insights available for this selection.")
 st.info(ai_message)
+
+# Example actionable item for Italy in "Track and analyze my spending habits"
+if project_type == "Track and analyze my spending habits" and spending_region == "Italy":
+    st.write("Would you like a comparison of local markets in your area?")
+    if st.button("Compare Local Markets"):
+        # Dummy local markets comparison data
+        market_data = {
+            "Market": ["Local Market A", "Local Market B", "Supermarket"],
+            "Average Price Index": [90, 95, 100]
+        }
+        df_markets = pd.DataFrame(market_data)
+        st.table(df_markets)
 
 # ------------------------ Footer ------------------------ #
 st.markdown("---")
