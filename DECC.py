@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Use a modern, clean style for all charts.
-plt.style.use('seaborn-whitegrid')
+# Use a universally available style.
+plt.style.use('seaborn')
 
 # ------------------------ Dummy Data ------------------------ #
 SPENDING_DATA = {
