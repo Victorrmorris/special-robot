@@ -3,104 +3,72 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # ---------------------- Page Configuration ---------------------- #
-st.set_page_config(page_title="DECC Automated Savings Optimizer", layout="wide")
+st.set_page_config(page_title="DECC Savings Forecast", layout="wide")
 
-# ---------------------- Sidebar ---------------------- #
-st.sidebar.header("🌍 Automated Savings Optimizer")
-
-# **User Selection: Financial Goal**
-financial_goal = st.sidebar.selectbox(
-    "Select your financial savings goal:",
-    [
-        "Automate my savings",
-        "Augment my savings using fintech apps",
-        "Optimize multi-currency savings",
-        "Compare savings accounts and interest rates",
-    ]
-)
-
-# **User Input: Monthly Income & Savings Target**
-st.sidebar.markdown("### 🏦 Financial Profile")
-monthly_income = st.sidebar.number_input("Enter your monthly income ($)", min_value=500, value=4000, step=100)
-savings_target = st.sidebar.number_input("Desired monthly savings ($)", min_value=0, value=500, step=50)
-
-# **User Input: Number of Accounts**
-num_accounts = st.sidebar.slider("How many bank accounts do you manage?", 1, 10, 4)
-num_fintech_apps = st.sidebar.slider("How many fintech apps do you use?", 0, 10, 3)
-
-# **Submit Button**
-if st.sidebar.button("Generate Insights"):
-    st.sidebar.success("📊 Insights Updated Below ⬇️")
-
-# ---------------------- Hardcoded Data ---------------------- #
-AI_INSIGHTS = {
-    "Automate my savings": "📌 Automating your savings can increase your long-term savings rate by up to 15%. Fintech apps like Acorns and Qapital help round up purchases to increase savings seamlessly.",
-    "Augment my savings using fintech apps": "📌 Millennials and Gen Z users save over **$27 billion** beyond their regular accounts through automated savings tools. Explore options like Yotta and Chime to boost your savings effortlessly.",
-    "Optimize multi-currency savings": "📌 Living in Europe? Use multi-currency fintech solutions like **Wise or Revolut** to store savings in multiple currencies and take advantage of the best exchange rates.",
-    "Compare savings accounts and interest rates": "📌 Your interest earnings could **double** by switching to a high-yield savings account (HYSA). Top HYSAs currently offer rates above **4.5% APY**."
+# ---------------------- User's Account Balances ---------------------- #
+account_balances = {
+    "USAA Checking": 4500.13,
+    "AMEX Savings": 20348.05,
+    "SCU Checking (Local)": 233.81,
+    "Wise (Multi-currency)": 198.76,
+    "Greenlight (Kids)": 300.00
 }
 
-BANK_DATA = {
-    "Bank": ["Schwab", "Fidelity", "Revolut", "Wise", "Monzo"],
-    "Interest Rate (%)": [4.5, 3.9, 2.5, 1.8, 2.0],
-    "Minimum Balance ($)": [0, 1000, 0, 0, 0]
+# ---------------------- Assumptions ---------------------- #
+monthly_income = 4000  # User's estimated monthly income ($)
+savings_rate = 0.15  # 15% of income is saved each month
+expense_reduction = 0.10  # 10% reduction in discretionary spending
+fintech_savings_boost = 0.05  # Additional 5% savings boost
+interest_rates = {
+    "AMEX Savings": 0.045,  # 4.5% APY
+    "Wise (Multi-currency)": 0.02  # 2.0% APY
 }
 
-FINTECH_APPS = {
-    "Fintech App": ["Acorns", "Qapital", "Yotta", "Digit", "Chime"],
-    "Savings Boost (%)": [10, 12, 8, 15, 11],
-    "User Base (millions)": [9, 6, 5, 7, 12]
-}
-
-# ---------------------- Chart Functions ---------------------- #
-def plot_savings_chart():
-    """Bar chart for savings by fintech app usage."""
-    apps = ["Acorns", "Qapital", "Yotta", "Digit", "Chime"]
-    boosts = [10, 12, 8, 15, 11]
-
-    fig, ax = plt.subplots(figsize=(7, 5))
-    ax.barh(apps, boosts, color=["#4A90E2", "#50E3C2", "#F5A623", "#9013FE", "#D0021B"])
-    ax.set_xlabel("Savings Boost (%)", fontsize=12)
-    ax.set_title("Fintech Apps & Savings Boost", fontsize=14, fontweight="bold")
-
-    for i, v in enumerate(boosts):
-        ax.text(v + 1, i, f"+{v}%", fontsize=12, fontweight="bold")
-
-    plt.grid(axis="x", linestyle="--", alpha=0.7)
-    plt.tight_layout()
-    return fig
-
-def plot_multi_currency_savings():
-    """Pie chart for savings split by currency."""
-    currencies = ["USD", "EUR", "GBP"]
-    allocations = [60, 30, 10]
-
-    fig, ax = plt.subplots(figsize=(7, 5))
-    wedges, texts, autotexts = ax.pie(
-        allocations, labels=currencies, autopct="%1.1f%%", colors=["#F5A623", "#4A90E2", "#50E3C2"],
-        startangle=90, wedgeprops={"edgecolor": "black"}, textprops={'fontsize': 12}
-    )
-
-    for text in autotexts:
-        text.set_fontsize(12)
-        text.set_fontweight("bold")
-
-    ax.set_title("Multi-Currency Savings Distribution", fontsize=14, fontweight="bold")
-    plt.tight_layout()
-    return fig
-
-def plot_savings_vs_income():
-    """Line chart comparing savings and income trends."""
-    months = ["Jan", "Feb", "Mar", "Apr", "May"]
-    savings = [500, 550, 600, 700, 750]
-    income = [4000, 4200, 4300, 4400, 4500]
-
-    fig, ax = plt.subplots(figsize=(7, 5))
-    ax.plot(months, savings, marker="o", linestyle="-", color="#50E3C2", label="Savings")
-    ax.plot(months, income, marker="s", linestyle="--", color="#F5A623", label="Income")
+# ---------------------- Savings Forecast Function ---------------------- #
+def calculate_savings_projection(months):
+    """Simulates savings growth over a given number of months."""
     
-    ax.set_ylabel("Amount ($)", fontsize=12)
-    ax.set_title("Savings vs. Income Over Time", fontsize=14, fontweight="bold")
+    # Initialize balances
+    projected_balances = account_balances.copy()
+    savings_growth = []
+
+    for month in range(1, months + 1):
+        # Monthly savings contribution
+        monthly_savings = monthly_income * savings_rate
+        fintech_boost = monthly_savings * fintech_savings_boost
+        total_monthly_savings = monthly_savings + fintech_boost
+
+        # Distribute savings
+        projected_balances["AMEX Savings"] += total_monthly_savings
+        projected_balances["USAA Checking"] += (monthly_income * expense_reduction)  # Extra savings
+
+        # Apply interest growth
+        for account, rate in interest_rates.items():
+            projected_balances[account] += projected_balances[account] * (rate / 12)  # Monthly interest
+
+        # Store for visualization
+        total_balance = sum(projected_balances.values())
+        savings_growth.append((month, total_balance))
+
+    return savings_growth
+
+# Generate savings projections for 6 and 12 months
+savings_6_months = calculate_savings_projection(6)
+savings_12_months = calculate_savings_projection(12)
+
+# ---------------------- Chart Function ---------------------- #
+def plot_savings_forecast():
+    """Line chart visualizing savings growth over time."""
+    months_6, balance_6 = zip(*savings_6_months)
+    months_12, balance_12 = zip(*savings_12_months)
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.plot(months_6, balance_6, marker="o", linestyle="-", label="6-Month Projection", color="#4A90E2")
+    ax.plot(months_12, balance_12, marker="s", linestyle="--", label="12-Month Projection", color="#F5A623")
+
+    ax.set_xlabel("Months", fontsize=12)
+    ax.set_ylabel("Total Savings ($)", fontsize=12)
+    ax.set_title("Projected Savings Growth Over Time", fontsize=14, fontweight="bold")
     ax.legend()
 
     plt.grid(axis="y", linestyle="--", alpha=0.7)
@@ -108,36 +76,26 @@ def plot_savings_vs_income():
     return fig
 
 # ---------------------- Display Section ---------------------- #
-st.title("💰 DECC Automated Savings Optimizer")
-st.subheader(f"📍 {financial_goal}")
+st.title("💰 DECC Automated Savings Forecast")
+st.subheader("📊 Projected Savings Growth Over 6 & 12 Months")
 
-# Display relevant chart based on the selected financial activity
-st.write("### 📊 Financial Analysis")
+# Display Chart
+st.pyplot(plot_savings_forecast())
 
-chart_mapping = {
-    "Automate my savings": plot_savings_vs_income,
-    "Augment my savings using fintech apps": plot_savings_chart,
-    "Optimize multi-currency savings": plot_multi_currency_savings,
-}
+# Display projected balances
+st.write("### 📌 Estimated Future Savings Balances")
+future_balances_6 = savings_6_months[-1][1]
+future_balances_12 = savings_12_months[-1][1]
 
-if financial_goal in chart_mapping:
-    st.pyplot(chart_mapping[financial_goal]())
+st.markdown(f"""
+- **💰 Total Balance Now:** **${sum(account_balances.values()):,.2f}**
+- **📈 6-Month Projection:** **${future_balances_6:,.2f}**  
+- **🚀 12-Month Projection:** **${future_balances_12:,.2f}**  
+""")
 
 # Display AI-driven insights
 st.write("### 🤖 AI Insights")
-st.info(AI_INSIGHTS.get(financial_goal, "No insights available for this selection."))
-
-# Display Bank Account Comparisons
-if financial_goal == "Compare savings accounts and interest rates":
-    df_banks = pd.DataFrame(BANK_DATA)
-    st.write("### 🏦 Bank Account Interest Rates")
-    st.table(df_banks)
-
-# Display Fintech Savings App Data
-if financial_goal == "Augment my savings using fintech apps":
-    df_apps = pd.DataFrame(FINTECH_APPS)
-    st.write("### 📲 Fintech Savings Apps & Boost")
-    st.table(df_apps)
+st.info("📌 Automating your savings with fintech apps and high-yield accounts could increase your savings by 20% over the next year.")
 
 # ---------------------- Footer ---------------------- #
 st.markdown("---")
