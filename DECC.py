@@ -2,399 +2,137 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# ------------------------ Dummy Data ------------------------ #
-SPENDING_DATA = {
-    "Germany": {
-        "Rent": 1800,
-        "Groceries": 700,
-        "Entertainment": 150,
-        "Transportation": 200,
-        "Utilities": 250
-    },
-    "Italy": {
-        "Rent": 1600,
-        "Groceries": 650,
-        "Entertainment": 200,
-        "Transportation": 180,
-        "Utilities": 230
-    },
-    "UK": {
-        "Rent": 1900,
-        "Groceries": 750,
-        "Entertainment": 250,
-        "Transportation": 220,
-        "Utilities": 300
-    },
+# ---------------------- Page Configuration ---------------------- #
+st.set_page_config(page_title="DECC Financial Dashboard", layout="wide")
+
+# ---------------------- Sidebar Navigation ---------------------- #
+st.sidebar.header("📊 Financial Activities")
+financial_activity = st.sidebar.radio(
+    "Select a financial activity:",
+    [
+        "Manage my bills",
+        "Create and manage budgets",
+        "View my savings or investments",
+        "View and manage my credit score",
+        "Categorize my expenses",
+        "Track and manage my subscriptions",
+    ]
+)
+
+# ---------------------- Hardcoded Data ---------------------- #
+AI_INSIGHTS = {
+    "Manage my bills": "📌 Your total outstanding bills this month are **$4,874.31**. Ensure timely payments to avoid late fees.",
+    "Create and manage budgets": "📌 You have **$231.84 remaining** across your household budgets. Consider adjusting discretionary spending.",
+    "View my savings or investments": "📌 Your current investment portfolio is valued at **$53,926.44**. Consider diversifying further for stability.",
+    "View and manage my credit score": "📌 Your credit utilization is **36.13%**, slightly over the recommended 30%. Paying down **$1,020** can improve your score.",
+    "Categorize my expenses": "📌 Your top expense category this month is **Rent ($1,800)**. Look for savings opportunities in discretionary spending.",
+    "Track and manage my subscriptions": "📌 You have **recurring payments** for Internet ($39.99) and Utilities ($30). Review and optimize your subscriptions."
 }
 
-# ------------------------ AI Responses ------------------------ #
-AI_RESPONSES = {
-    "Track and analyze my spending habits": {
-        "Germany": "Your highest expense in Germany is rent, followed by groceries. Consider adjusting entertainment spending for better savings.",
-        "Italy": ("Housing and groceries take up the majority of your spending in Italy. Look into local markets for better grocery savings. "
-                  "Would you like a comparison of local markets in your area?"),
-        "UK": "Rent in the UK is a significant portion of your budget. Public transport passes might help reduce overall travel expenses."
-    },
-    "Reduce my expenses": {
-        "Germany": "To reduce expenses in Germany, consider switching to budget grocery stores like Aldi and Lidl and cutting back on dining out.",
-        "Italy": "Reducing expenses in Italy? Minimize transportation costs by using regional train passes and buying groceries in bulk.",
-        "UK": "In the UK, avoiding peak-hour transportation fares and seeking out rent-sharing opportunities could lower costs."
-    },
-    "Set a monthly budget": {
-        "Germany": "Setting a budget? Try allocating 50% to needs, 30% to wants, and 20% to savings while tracking expenses weekly.",
-        "Italy": "For Italy, make sure to budget for unexpected fees such as tourist taxes or annual home maintenance costs.",
-        "UK": "UK budgeting tip: Track variable expenses like electricity, which fluctuates seasonally, to avoid overspending."
-    },
-    "Optimize currency exchange": {
-        "Germany": "Frequent transactions in Germany? Use a multi-currency bank account like Wise to minimize conversion fees.",
-        "Italy": "For Italy, avoid dynamic currency conversion when paying with foreign cards—it often leads to extra fees.",
-        "UK": "Using Revolut or Monzo in the UK could help optimize currency exchange rates and reduce international withdrawal fees."
-    },
-    "Consolidate multi-currency accounts": {
-        "Germany": "Consolidating your accounts in Germany has simplified tracking. Consider using automated tools for real-time currency conversion.",
-        "Italy": "Your multi-currency accounts in Italy are well balanced. Regularly review exchange rates to optimize fund allocation.",
-        "UK": "Consolidating UK accounts improves clarity. Monitor currency fluctuations to adjust your holdings accordingly."
-    }
-}
-
-# ------------------------ Actionable AI Insights ------------------------ #
-ACTIONABLE_INSIGHTS = {
-    "Track and analyze my spending habits": {
-        "Germany": [
-            "Review monthly spending reports",
-            "Set alerts for overspending",
-            "Schedule a consultation with a financial advisor"
-        ],
-        "Italy": [
-            "Compare local grocery prices",
-            "Review expense categories",
-            "Consider a budgeting app"
-        ],
-        "UK": [
-            "Analyze rent vs. utilities",
-            "Explore shared housing options",
-            "Investigate public transport discounts"
-        ]
-    },
-    "Reduce my expenses": {
-        "Germany": [
-            "Switch to budget grocery stores",
-            "Reduce dining out frequency",
-            "Check subscription services for redundancy"
-        ],
-        "Italy": [
-            "Negotiate transportation fares",
-            "Bulk purchase essentials",
-            "Review dining out expenses"
-        ],
-        "UK": [
-            "Compare rent-sharing options",
-            "Review energy bills",
-            "Check local deals for groceries"
-        ]
-    },
-    "Set a monthly budget": {
-        "Germany": [
-            "Draft a monthly budget plan",
-            "Track weekly expenses",
-            "Set clear savings targets"
-        ],
-        "Italy": [
-            "Use budgeting apps",
-            "Set aside emergency funds",
-            "Plan for annual fees"
-        ],
-        "UK": [
-            "Implement seasonal budgeting",
-            "Monitor utility expenses",
-            "Adjust discretionary spending"
-        ]
-    },
-    "Optimize currency exchange": {
-        "Germany": [
-            "Research multi-currency accounts",
-            "Compare exchange rates regularly",
-            "Consider fintech solutions for transfers"
-        ],
-        "Italy": [
-            "Check for dynamic conversion fees",
-            "Compare fees among providers",
-            "Switch to a multi-currency card"
-        ],
-        "UK": [
-            "Monitor exchange rate fluctuations",
-            "Use cost-effective transfer services",
-            "Negotiate fees with your bank"
-        ]
-    },
-    "Consolidate multi-currency accounts": {
-        "Germany": [
-            "Integrate accounts into a single dashboard",
-            "Set up real-time exchange alerts",
-            "Review automated conversion tools"
-        ],
-        "Italy": [
-            "Streamline account management",
-            "Monitor consolidation benefits",
-            "Research account integration apps"
-        ],
-        "UK": [
-            "Consolidate accounts for clarity",
-            "Use digital tools for account management",
-            "Compare consolidation platforms"
-        ]
-    }
-}
-
-# ------------------------ Helper Functions ------------------------ #
-@st.cache_data
-def get_spending_data():
-    """Returns the spending data dictionary."""
-    return SPENDING_DATA
-
-@st.cache_data
-def get_ai_responses():
-    """Returns the AI responses dictionary."""
-    return AI_RESPONSES
-
-@st.cache_data
-def get_actionable_insights():
-    """Returns the actionable insights dictionary."""
-    return ACTIONABLE_INSIGHTS
-
-# ------------------------ Chart Functions ------------------------ #
-def plot_spending_breakdown(region: str, spending_data: dict) -> plt.Figure:
-    """Bar chart for spending breakdown."""
-    spending = spending_data.get(region, {})
-    df = pd.DataFrame(list(spending.items()), columns=["Category", "Amount"])
+# ---------------------- Chart Functions ---------------------- #
+def plot_bills_chart():
+    """Bar chart showing upcoming bill payments."""
+    categories = ["Rent", "Internet", "Utilities"]
+    amounts = [1800, 39.99, 30]
     
     fig, ax = plt.subplots(figsize=(6, 4))
-    bars = ax.bar(df["Category"], df["Amount"], color="skyblue")
-    ax.set_title(f"Spending Breakdown in {region}")
-    ax.set_xlabel("Category")
+    ax.bar(categories, amounts, color=["#4A90E2", "#50E3C2", "#F5A623"])
+    ax.set_title("Upcoming Bill Payments")
     ax.set_ylabel("Amount ($)")
     
-    # Add value labels on top of each bar
-    for bar in bars:
-        height = bar.get_height()
-        ax.annotate(
-            f'{height}',
-            xy=(bar.get_x() + bar.get_width() / 2, height),
-            xytext=(0, 3),
-            textcoords="offset points",
-            ha="center",
-            va="bottom"
-        )
     plt.tight_layout()
     return fig
 
-def plot_expense_reduction_chart(spending: dict) -> plt.Figure:
-    """Grouped bar chart comparing current spending vs. a 10% reduction."""
-    categories = list(spending.keys())
-    current_spending = [spending[cat] for cat in categories]
-    reduced_spending = [amt * 0.9 for amt in current_spending]
+def plot_budget_chart():
+    """Donut chart for budget allocation."""
+    categories = ["Needs", "Wants", "Savings"]
+    values = [50, 30, 20]
+    colors = ["#F5A623", "#4A90E2", "#50E3C2"]
     
     fig, ax = plt.subplots(figsize=(6, 4))
-    width = 0.35
-    indices = range(len(categories))
+    ax.pie(values, labels=categories, autopct="%1.1f%%", colors=colors, startangle=90, wedgeprops={"edgecolor": "black"})
+    ax.set_title("Budget Allocation")
     
-    ax.bar([i - width/2 for i in indices], current_spending, width=width,
-           label='Current', color='salmon')
-    ax.bar([i + width/2 for i in indices], reduced_spending, width=width,
-           label='Reduced (10%)', color='lightgreen')
+    plt.tight_layout()
+    return fig
+
+def plot_investments_chart():
+    """Bar chart for investment portfolio."""
+    accounts = ["Schwab", "Fidelity", "Thrift Savings Plan"]
+    balances = [7890.32, 12487.23, 33548.89]
     
-    ax.set_xlabel("Category")
-    ax.set_ylabel("Amount ($)")
-    ax.set_title("Expense Reduction Potential")
-    ax.set_xticks(indices)
-    ax.set_xticklabels(categories)
+    fig, ax = plt.subplots(figsize=(6, 4))
+    ax.bar(accounts, balances, color=["#4A90E2", "#50E3C2", "#F5A623"])
+    ax.set_title("Investment Portfolio")
+    ax.set_ylabel("Balance ($)")
+    
+    plt.tight_layout()
+    return fig
+
+def plot_credit_chart():
+    """Line chart for credit utilization trend."""
+    months = ["Jan", "Feb", "Mar", "Apr", "May"]
+    utilization = [34, 35, 36, 36.5, 36.13]
+    
+    fig, ax = plt.subplots(figsize=(6, 4))
+    ax.plot(months, utilization, marker="o", linestyle="-", color="#F5A623")
+    ax.set_title("Credit Utilization Over Time")
+    ax.set_ylabel("Utilization (%)")
+    ax.axhline(y=30, color="red", linestyle="--", label="Recommended 30%")
     ax.legend()
     
     plt.tight_layout()
     return fig
 
-def plot_budget_donut_chart(budget_goal: int) -> plt.Figure:
-    """
-    Donut chart showing the AI-recommended allocations:
-      - Needs: 50%
-      - Wants: 30%
-      - Savings: 20%
-    Dollar amounts are calculated from the default budget target.
-    """
-    allocations = {"Needs": 50, "Wants": 30, "Savings": 20}
-    amounts = [budget_goal * pct / 100 for pct in allocations.values()]
-    labels = [f"{cat} ({pct}%)" for cat, pct in allocations.items()]
-    colors = ["gold", "lightcoral", "lightskyblue"]
+def plot_expenses_chart():
+    """Pie chart for expense categorization."""
+    categories = ["Rent", "Groceries", "Utilities", "Entertainment", "Education"]
+    amounts = [1800, 845.98, 179.20, 154.67, 123.54]
+    colors = ["#F5A623", "#4A90E2", "#50E3C2", "#9013FE", "#D0021B"]
     
     fig, ax = plt.subplots(figsize=(6, 4))
-    ax.pie(
-        amounts, 
-        labels=labels, 
-        autopct=lambda pct: f"${budget_goal * pct / 100:.0f}",
-        startangle=90,
-        colors=colors,
-        wedgeprops=dict(width=0.4)
-    )
-    ax.set_title("Budget Allocation (Needs: 50%, Wants: 30%, Savings: 20%)")
-    ax.set(aspect="equal")
+    ax.pie(amounts, labels=categories, autopct="%1.1f%%", colors=colors, startangle=90, wedgeprops={"edgecolor": "black"})
+    ax.set_title("Expense Categorization")
+    
     plt.tight_layout()
     return fig
 
-def plot_currency_optimization_chart(region: str) -> plt.Figure:
-    """
-    Dummy bar chart for currency exchange optimization.
-    Simulates current vs. optimized exchange rates for the selected region.
-    """
-    data = {
-        "Germany": {"Current Rate": 1.00, "Optimized Rate": 0.98},
-        "Italy": {"Current Rate": 1.00, "Optimized Rate": 0.97},
-        "UK": {"Current Rate": 1.00, "Optimized Rate": 0.99}
-    }
-    region_data = data.get(region, {"Current Rate": 1.00, "Optimized Rate": 1.00})
-    categories = list(region_data.keys())
-    rates = list(region_data.values())
+def plot_subscriptions_chart():
+    """Bar chart for subscription management."""
+    services = ["Internet", "Utilities", "Streaming"]
+    costs = [39.99, 30, 14.99]
     
     fig, ax = plt.subplots(figsize=(6, 4))
-    bars = ax.bar(categories, rates, color=['skyblue', 'lightgreen'])
-    ax.set_title(f"Currency Exchange Optimization for {region}")
-    ax.set_ylabel("Exchange Rate")
+    ax.bar(services, costs, color=["#4A90E2", "#50E3C2", "#F5A623"])
+    ax.set_title("Monthly Subscription Costs")
+    ax.set_ylabel("Cost ($)")
     
-    for bar in bars:
-        height = bar.get_height()
-        ax.annotate(f'{height:.2f}',
-                    xy=(bar.get_x() + bar.get_width() / 2, height),
-                    xytext=(0, 3),
-                    textcoords="offset points",
-                    ha="center", va="bottom")
     plt.tight_layout()
     return fig
 
-def plot_multi_currency_chart() -> plt.Figure:
-    """Pie chart showing distribution across multi-currency accounts."""
-    currencies = ["USD", "EUR", "GBP"]
-    balances = [3000, 2500, 1500]
-    colors = ["#ffcc99", "#c2c2f0", "#ffb3e6"]
-    
-    fig, ax = plt.subplots(figsize=(6, 4))
-    ax.pie(balances, labels=currencies, autopct=lambda pct: f"${pct:.0f}", colors=colors, startangle=90)
-    ax.set_title("Multi-Currency Account Distribution")
-    ax.set(aspect="equal")
-    plt.tight_layout()
-    return fig
+# ---------------------- Display Section ---------------------- #
+st.title("💰 DECC Financial Dashboard")
+st.subheader(f"📍 {financial_activity}")
 
-# ------------------------ Financial Goal Chart Selector ------------------------ #
-def get_financial_goal_chart(project_type: str, spending_data: dict,
-                             spending_region: str, budget_goal: int) -> plt.Figure:
-    """
-    Returns the appropriate chart based on the selected financial goal.
-    """
-    spending = spending_data.get(spending_region, {})
-    if project_type == "Track and analyze my spending habits":
-        return plot_spending_breakdown(spending_region, spending_data)
-    elif project_type == "Reduce my expenses":
-        return plot_expense_reduction_chart(spending)
-    elif project_type == "Set a monthly budget":
-        return plot_budget_donut_chart(budget_goal)
-    elif project_type == "Optimize currency exchange":
-        return plot_currency_optimization_chart(spending_region)
-    elif project_type == "Consolidate multi-currency accounts":
-        return plot_multi_currency_chart()
-    else:
-        return plot_spending_breakdown(spending_region, spending_data)
+# Display relevant chart based on the selected financial activity
+st.write("### 📊 Financial Analysis")
 
-# ------------------------ Streamlit App Config ------------------------ #
-st.set_page_config(page_title="DECC Financial Insights", layout="wide")
+chart_mapping = {
+    "Manage my bills": plot_bills_chart,
+    "Create and manage budgets": plot_budget_chart,
+    "View my savings or investments": plot_investments_chart,
+    "View and manage my credit score": plot_credit_chart,
+    "Categorize my expenses": plot_expenses_chart,
+    "Track and manage my subscriptions": plot_subscriptions_chart,
+}
 
-# ------------------------ Sidebar Inputs ------------------------ #
-st.sidebar.header("📊 Define Your Financial Project")
-ai_responses = get_ai_responses()
+if financial_activity in chart_mapping:
+    st.pyplot(chart_mapping[financial_activity]())
 
-# Debug: Display available financial goals for verification.
-st.sidebar.write("Available Financial Goals:", list(ai_responses.keys()))
-
-project_type = st.sidebar.selectbox("Select a financial goal:", list(ai_responses.keys()))
-
-st.sidebar.header("🌍 Select Spending Region")
-spending_data = get_spending_data()
-spending_region = st.sidebar.selectbox("Choose a region:", list(spending_data.keys()))
-
-# A default budget target is used.
-budget_goal = 2000  # Default budget target
-
-# ------------------------ Live Query in Sidebar ------------------------ #
-st.sidebar.header("💬 Live Query")
-user_query = st.sidebar.text_area(
-    "Enter your query", 
-    "What are the best internet providers in Northern Italy?", 
-    height=150
-)
-if st.sidebar.button("Get Live Insight"):
-    if user_query.strip().lower() == "what are the best internet providers in northern italy?":
-        live_insight = ("Based on our dummy data, Fastweb and Vodafone offer the best deals and fastest speeds in Northern Italy.")
-    else:
-        live_insight = "Dummy insight: This feature is under development. Please try again with a different query."
-    st.sidebar.write(live_insight)
-
-# ------------------------ Main Layout ------------------------ #
-st.title("💰 DECC Financial Insights Dashboard")
-st.subheader(f"📍 {spending_region} - {project_type}")
-
-# Display the selected financial goal chart.
-st.write("### 📊 Financial Goal Analysis")
-fig_goal = get_financial_goal_chart(project_type, spending_data, spending_region, budget_goal)
-st.pyplot(fig_goal, use_container_width=True)
-
-# Display AI Insights.
+# Display AI-driven insights
 st.write("### 🤖 AI Insights")
-ai_message = ai_responses.get(project_type, {}).get(spending_region, "No insights available for this selection.")
-st.info(ai_message)
+st.info(AI_INSIGHTS.get(financial_activity, "No insights available for this selection."))
 
-# ------------------------ Actionable AI Insights Section ------------------------ #
-st.write("### 🛠 Actionable AI Insights")
-actionable_insights = get_actionable_insights()
-# Get the list of actionable insights for the selected goal and region
-goal_actionables = actionable_insights.get(project_type, {}).get(spending_region, [])
-selected_actionables = st.multiselect("Select actionable insights to view:", goal_actionables)
-if selected_actionables:
-    for insight in selected_actionables:
-        st.info(insight)
-
-# ------------------------ Additional Actionable Items ------------------------ #
-if project_type == "Track and analyze my spending habits":
-    if st.checkbox("Would you like to see a detailed table of your spending data?"):
-        df_data = pd.DataFrame(
-            list(spending_data.get(spending_region, {}).items()),
-            columns=["Category", "Amount"]
-        )
-        st.table(df_data)
-
-if project_type == "Reduce my expenses":
-    if st.checkbox("Would you like to see potential cost-saving alternatives?"):
-        cost_savings_data = {
-            "Expense Category": ["Groceries", "Entertainment", "Transportation", "Utilities"],
-            "Suggested Savings": [
-                "Save $50 by buying in bulk",
-                "Cut $20 by reducing subscriptions",
-                "Save $30 with public transit",
-                "Reduce $15 by conserving energy"
-            ]
-        }
-        st.table(pd.DataFrame(cost_savings_data))
-
-if project_type == "Set a monthly budget":
-    if st.checkbox("Would you like to set a budget based on your monthly income?"):
-        monthly_income = st.number_input("Enter your monthly income ($)", min_value=100, value=3000, key="income_input")
-        recommended_budget = monthly_income * 0.7
-        st.write(f"Based on your monthly income of ${monthly_income}, your recommended monthly budget is ${recommended_budget:.2f}.")
-
-if project_type == "Optimize currency exchange":
-    if st.checkbox("Would you like to see a comparison of exchange fees among popular providers?"):
-        provider_data = {
-            "Provider": ["Wise", "Revolut", "Monzo", "Local Bank"],
-            "Fee": ["1.5%", "1.0%", "1.2%", "3.0%"]
-        }
-        st.table(pd.DataFrame(provider_data))
-
-# ------------------------ Footer ------------------------ #
+# ---------------------- Footer ---------------------- #
 st.markdown("---")
 st.markdown("🔒 **DECC ensures secure, compliant multi-bank financial management for Americans abroad.**")
